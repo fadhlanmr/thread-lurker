@@ -23,5 +23,24 @@ def list_board (board_last_get) :
     url_board = url.default + endpoint.board
     headers = {"If-Modified-Since":board_last_get}
     response = requests.get(url_board, headers=headers)
+    # check if mongodb entry have update
+    # append / insert new entry to mongodb board
+    # response_board store the return code
+    return response
 
+def list_thread (board_2_code, thread_last_get) :
+    url_thread = f'{url.default}/{board_2_code}/{endpoint.catalog}'
+    headers = {"If-Modified-Since":thread_last_get}
+    response = requests.get(url_thread, headers)
+    # clean some column
+    # response_thread store the cleaned response
+    return response
+
+def list_single_thread (board_2_code, thread_code, thread_last_get) :
+    url_thread = f'{url.default}/{board_2_code}/thread/{thread_code}'
+    headers = {"If-Modified-Since":thread_last_get}
+    response = requests.get(url_thread, headers)
+    # clean some column
+    # response_cleaned store the cleaned response
+    return response
 
