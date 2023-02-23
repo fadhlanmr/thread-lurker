@@ -29,23 +29,21 @@ def unix_to_gmt (unix_num) :
 def call_api (last_get, urls, endpoints) :
     url_board = f"http://{urls}/{endpoints}"
     headers = {"If-Modified-Since":last_get}
-    response = requests.get(url_board, headers=headers)
-    #json_list = json.loads(response.json())
+    try:
+        response = requests.get(url_board, headers=headers)
+        response.raise_for_status()
+        #below refers to requests stored status codes https://github.com/psf/requests/blob/main/requests/status_codes.py
+        if response.status_code == requests.codes.ok :
+            api_output = response.json()
+        else :
+            api_output = response.status_code
+        
+        return api_output
 
-    #below refers to requests stored status codes https://github.com/psf/requests/blob/main/requests/status_codes.py
-    if response != requests.codes.ok :
-        api_output = response.status_code
-    else :
-        api_output = response.json()
-    
-    # check if mongodb entry have update
-    # append / insert new entry to mongodb board
-    # response_board store the return code
-    
-    return api_output
+    except requests.exceptions.RequestException as e:
+        print(f'Request failed: {e}')
 
 print(call_api(unix_to_gmt(lgb), url.default, endpoint.board))
-        
 
 def list_thread (board_2_code, thread_last_get) :
     url_thread = f'{url.default}/{board_2_code}/{endpoint.catalog}'
