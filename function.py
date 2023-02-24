@@ -26,11 +26,17 @@ def unix_to_gmt (unix_num) :
 
     return date_gmt
 
-def call_api (last_get, urls, endpoints) :
-    url_board = f"http://{urls}/{endpoints}"
+def call_api (urls, endpoints, last_get, board_code, thread) :
+    if(board_code is not None):
+        if(thread is not None):
+            url_call = f"http://{urls}/{board_code}/thread/{thread}.json"
+        else:
+            url_call = f"http://{urls}/{board_code}/{endpoints}"
+    else:
+        url_call = f"http://{urls}/{endpoints}"
     headers = {"If-Modified-Since":last_get}
     try:
-        response = requests.get(url_board, headers=headers)
+        response = requests.get(url_call, headers=headers)
         response.raise_for_status()
         #below refers to requests stored status codes https://github.com/psf/requests/blob/main/requests/status_codes.py
         if response.status_code == requests.codes.ok :
