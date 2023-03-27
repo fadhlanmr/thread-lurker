@@ -1,13 +1,8 @@
-import requests
-import json
-import datetime
+import time
+import api_call as acall
 
 lgb = 1675420911
 lgt = 1675420911
-
-class lastGet :
-    boards = lgb
-    threads = lgt
 
 class url :
     default = "a.4cdn.org"
@@ -20,49 +15,30 @@ class endpoint :
     catalog = "catalog.json"
     archive = "archive.json"
 
-def unix_to_gmt (unix_num) :
-    date_raw = datetime.datetime.fromtimestamp(unix_num)
-    date_gmt = f'{date_raw.strftime("%a")}, {date_raw.strftime("%d")} {date_raw.strftime("%b")} {date_raw.strftime("%Y")} {date_raw.strftime("%X")} GMT'
+def req (url, **kwargs) :
+    r"""Request 4chan API.
+    :param url: URL for the 4chan API.
+    :param \*\*kwargs: Optional arguments that ``api_call`` takes.
+    :return: :JSON type object response
+    :rtype: json
 
-    return date_gmt
+    Usage::
+      >>> import function
+      >>> req = function.req(url.default, last_get=lgb, thread=endpoint.board)
+      >>> req
+      <Response JSON>
+    """
+    return acall.call_api(url=url, **kwargs)
 
-def call_api (urls, endpoints, last_get, board_code, thread) :
-    if(board_code is not None):
-        if(thread is not None):
-            url_call = f"http://{urls}/{board_code}/thread/{thread}.json"
-        else:
-            url_call = f"http://{urls}/{board_code}/{endpoints}"
-    else:
-        url_call = f"http://{urls}/{endpoints}"
-    headers = {"If-Modified-Since":last_get}
-    try:
-        response = requests.get(url_call, headers=headers)
-        response.raise_for_status()
-        #below refers to requests stored status codes https://github.com/psf/requests/blob/main/requests/status_codes.py
-        if response.status_code == requests.codes.ok :
-            api_output = response.json()
-        else :
-            api_output = response.status_code
-        
-        return api_output
+while True:
+    # Make request to 4chan API
+    req(url.default, board_code="vt", endpoint=endpoint.catalog)
 
-    except requests.exceptions.RequestException as e:
-        print(f'Request failed: {e}')
+    # Process posts as needed
+    for x in req:
+        # Do something with post data
+        print(x['com'])
 
-print(call_api(unix_to_gmt(lgb), url.default, endpoint.board))
+    # Wait before making next request
+    time.sleep(60)
 
-def list_thread (board_2_code, thread_last_get) :
-    url_thread = f'{url.default}/{board_2_code}/{endpoint.catalog}'
-    headers = {"If-Modified-Since":thread_last_get}
-    response = requests.get(url_thread, headers)
-    # clean some column
-    # response_thread store the cleaned response
-    return response
-
-def list_single_thread (board_2_code, thread_code, thread_last_get) :
-    url_thread = f'{url.default}/{board_2_code}/thread/{thread_code}'
-    headers = {"If-Modified-Since":thread_last_get}
-    response = requests.get(url_thread, headers)
-    # clean some column
-    # response_cleaned store the cleaned response
-    return response
