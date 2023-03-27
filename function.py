@@ -1,4 +1,5 @@
 import time
+import json
 import api_call as acall
 
 lgb = 1675420911
@@ -32,12 +33,15 @@ def req (url, **kwargs) :
 
 while True:
     # Make request to 4chan API
-    req(url.default, board_code="vt", endpoint=endpoint.catalog)
+    resp = req(url.default, board_code="vt", endpoint=endpoint.catalog)
+    # print(resp)
+    data = json.loads(resp)
+    threads = []
+    for item in data:
+        threads.extend(item['threads'])
 
-    # Process posts as needed
-    for x in req:
-        # Do something with post data
-        print(x['com'])
+    json_utf8 = json.dumps(threads, ensure_ascii=False)
+    print(json_utf8)
 
     # Wait before making next request
     time.sleep(60)

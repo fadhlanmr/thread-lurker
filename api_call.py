@@ -26,7 +26,9 @@ def call_api (url, endpoint=None, unix=None, board_code=None, thread=None) :
         response.raise_for_status()
         #below refers to requests stored status codes https://github.com/psf/requests/blob/main/requests/status_codes.py
         if response.status_code == requests.codes.ok :
-            api_output = response.json()
+            api_output = response.text
+            # encoderJson = json.dumps(resp, ensure_ascii=False).encode('utf-8')
+            # api_output = json.loads(encoderJson)
         else :
             api_output = response.status_code
         
