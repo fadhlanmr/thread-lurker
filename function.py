@@ -96,7 +96,7 @@ while True:
             thread_resp_data = json.loads(thread_resp)
             # threads = []
             for post in thread_resp_data['posts']:
-                if 'resto' not in post:
+                if 'resto' in post:
                     if threadCollect.find_one({"no": post["no"]}):
                         threadCollect.update_one({"no": post["no"]}, {"$set": post})
                         print(f"[{current_time}] - Updated thread reply: {post['no']}; on: {post['time']}")
