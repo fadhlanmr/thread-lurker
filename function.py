@@ -28,6 +28,9 @@ client = pymongo.MongoClient(env.mongoURL)
 db = client[env.mongodb]
 boardCollect = db[env.boardCollect]
 threadCollect = db[env.threadCollect]
+tLocal = time.localtime()
+tCurrent = time.time()
+current_time = time.strftime("%H:%M:%S", t)
 
 def req (url, **kwargs) :
     r"""Request 4chan API.
@@ -66,11 +69,11 @@ def board_list(url, **kwargs) :
             if thread_exists:
                 # Update the reply if it has changed
                 boardCollect.update_one({"no": listed["no"]}, {"$set": listed})
-                print(f"Updated thread list: {listed['no']}; on: {listed['time']}")
+                print(f"[{current_time}] - Updated thread list: {listed['no']}; on: {listed['time']}")
             else:
                 # Insert the new reply
                 boardCollect.insert_one(listed)
-                print(f"Inserted thread list: {listed['no']}; on: {listed['time']}")
+                print(f"[{current_time}] - Inserted thread list: {listed['no']}; on: {listed['time']}")
 
     # turn list -> str, use encode utf to get bytes
     # json_utf8 = json.dumps(threads, ensure_ascii=False)
@@ -83,10 +86,19 @@ while True:
     thread_loop = []
     thread_loop.extend(board_list(url.default, board_code="vt", endpoint=endpoint.catalog))
     
-    # for threads in thread_loop:
-    #     time.sleep(2)
+    for threads in thread_loop:
+        thread_resp = req(url.default, board_code="vt", thread=threads['thread_id'])
+        thread_resp_data = json.loads(thread_resp)
+        # threads = []
+        for item in thread_resp_data['posts']:
+            if 'resto' not in item:
+                threadCollect.update_one({"no": item["no"]}, {"$set": item})
+                print(f"[{current_time}] - Updated thread reply: {item['no']}; on: {item['time']}")
+            else:
+                threadCollect.insert_one(item)
+                print(f"[{current_time}] - Inserted thread reply: {item['no']}; on: {item['time']}")
+        time.sleep(2)
         
-
     # Wait before making next request
     time.sleep(60)
 
