@@ -30,7 +30,7 @@ boardCollect = db[env.boardCollect]
 threadCollect = db[env.threadCollect]
 tLocal = time.localtime()
 tCurrent = time.time()
-current_time = time.strftime("%b/%d/%Y %H:%M:%S", tLocal)
+current_time = time.strftime("%d/%b/%Y %H:%M:%S", tLocal)
 
 def req (url, **kwargs) :
     r"""Request 4chan API.
