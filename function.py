@@ -87,22 +87,22 @@ def board_list(url, **kwargs) :
 
 while True:
     # initiate and get thread list
-    thread_loop = []
-    thread_loop.extend(board_list(url.default, board_code="vt", endpoint=endpoint.catalog))
+    thread_loop = board_list(url.default, board_code="vt", endpoint=endpoint.catalog)
     for threads in thread_loop:
         if 'thread_closed' in threads:
             continue
-        thread_resp = req(url.default, board_code="vt", thread=threads["thread_id"])
-        thread_resp_data = json.loads(thread_resp)
-        # threads = []
-        for post in thread_resp_data['posts']:
-            if 'resto' not in post:
-                if threadCollect.find_one({"no": post["no"]}):
-                    threadCollect.update_one({"no": post["no"]}, {"$set": post})
-                    print(f"[{current_time}] - Updated thread reply: {post['no']}; on: {post['time']}")
-                else:
-                    threadCollect.insert_one(post)
-                    print(f"[{current_time}] - Inserted thread reply: {post['no']}; on: {post['time']}")
+        else:
+            thread_resp = req(url.default, board_code="vt", thread=threads["thread_id"])
+            thread_resp_data = json.loads(thread_resp)
+            # threads = []
+            for post in thread_resp_data['posts']:
+                if 'resto' not in post:
+                    if threadCollect.find_one({"no": post["no"]}):
+                        threadCollect.update_one({"no": post["no"]}, {"$set": post})
+                        print(f"[{current_time}] - Updated thread reply: {post['no']}; on: {post['time']}")
+                    else:
+                        threadCollect.insert_one(post)
+                        print(f"[{current_time}] - Inserted thread reply: {post['no']}; on: {post['time']}")
         time.sleep(2)
         
     # Wait before making next request
