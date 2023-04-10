@@ -64,8 +64,12 @@ def board_list(url, **kwargs) :
             thread_exists = boardCollect.find_one({"no": thread_id})
 
             if 'sticky' not in listed:
-                # skip if sticky (either permanent thread or sticky thread)
-                thread_list.append({'thread_id':listed['no'],'thread_posted':listed['time'],'thread_update':listed['last_modified'],'thread_closed':listed['closed'] | None})
+                if 'closed' in listed:
+                    # skip if sticky and closed (either permanent thread or sticky thread)
+                    thread_list.append({'thread_id':listed['no'],'thread_posted':listed['time'],'thread_update':listed['last_modified'],'thread_closed':listed['closed']})
+                else:
+                    # skip if sticky (either permanent thread or sticky thread)
+                    thread_list.append({'thread_id':listed['no'],'thread_posted':listed['time'],'thread_update':listed['last_modified']})
             if thread_exists:
                 # Update the reply if it has changed
                 boardCollect.update_one({"no": listed["no"]}, {"$set": listed})
