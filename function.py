@@ -66,11 +66,11 @@ def board_list(url, **kwargs) :
             if thread_exists:
                 # Update the reply if it has changed
                 boardCollect.update_one({"no": listed["no"]}, {"$set": listed})
-                print(f"Updated thread list:" + listed["no"] + "; on: " + listed['time'])
+                print(f"Updated thread list: {listed['no']}; on: {listed['time']}")
             else:
                 # Insert the new reply
                 boardCollect.insert_one(listed)
-                print(f"Inserted thread list:" + listed["no"] + "; on: " + listed['time'])
+                print(f"Inserted thread list: {listed['no']}; on: {listed['time']}")
 
     # turn list -> str, use encode utf to get bytes
     # json_utf8 = json.dumps(threads, ensure_ascii=False)
