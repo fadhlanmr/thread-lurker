@@ -1,6 +1,14 @@
 import time
 import json
 import api_call as acall
+import os
+import pymongo
+
+class env :
+    mongoURL = os.environ.get("MONGODB")
+    mongodb = os.environ.get("THREAD_LURKER_DB")
+    threadCollect = os.environ.get("THREAD_COLLECT")
+    boardCollect = os.environ.get("BOARD_COLLECT")
 
 class url :
     default = "a.4cdn.org"
@@ -12,6 +20,12 @@ class endpoint :
     board = "boards.json"
     catalog = "catalog.json"
     archive = "archive.json"
+
+# Set up collection for thread collect
+client = pymongo.MongoClient(env.mongoURL)
+db = client[env.mongodb]
+boardCollect = db[env.boardCollect]
+threadCollect = db[env.threadCollect]
 
 def req (url, **kwargs) :
     r"""Request 4chan API.
@@ -36,19 +50,28 @@ def board_list(url, **kwargs) :
     # Make request to 4chan API
     resp = req(url, **kwargs)
     data = json.loads(resp)
-    threads = []
+    # threads = []
     thread_list = []
     for item in data:
-        threads.extend(item['threads'])
+        # threads.extend(item['threads'])
         for listed in item['threads']:
+            thread_id = listed["no"]
+            thread_exists = boardCollect.find_one({"no": thread_id})
+
             if 'sticky' not in listed:
-                thread_list.extend({'thread_id':item['no'],'thread_posted':item['time'],'thread_update':item['last_modified']})
+                # skip if sticky (either permanent thread or sticky thread)
+                thread_list.extend({'thread_id':listed['no'],'thread_posted':listed['time'],'thread_update':listed['last_modified']})
+            if thread_exists:
+                # Update the reply if it has changed
+                boardCollect.update_one({"no": listed["no"]}, {"$set": listed})
+                print("Updated thread list:", listed["no"])
+            else:
+                # Insert the new reply
+                boardCollect.insert_one(listed)
+                print("Inserted thread list:", listed["no"])
 
     # turn list -> str, use encode utf to get bytes
-    json_utf8 = json.dumps(threads, ensure_ascii=False)
-    #
-    # threads[] json to mangodb
-    #
+    # json_utf8 = json.dumps(threads, ensure_ascii=False)
 
     # return thread_list for updating purpose
     return thread_list
@@ -58,9 +81,9 @@ while True:
     thread_loop = []
     thread_loop.extend(board_list(url.default, board_code="vt", endpoint=endpoint.catalog))
     
-    for threads in thread_loop :
+    for threads in thread_loop:
         time.sleep(2)
-
+        
 
     # Wait before making next request
     time.sleep(60)
