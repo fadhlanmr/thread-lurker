@@ -2,9 +2,11 @@ import time
 import json
 import api_call as acall
 import os
+from dotenv import load_dotenv
 import pymongo
 
 class env :
+    load_dotenv()
     mongoURL = os.environ.get("MONGODB")
     mongodb = os.environ.get("THREAD_LURKER_DB")
     threadCollect = os.environ.get("THREAD_COLLECT")
