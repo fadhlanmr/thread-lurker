@@ -90,7 +90,7 @@ while True:
     thread_loop = []
     thread_loop.extend(board_list(url.default, board_code="vt", endpoint=endpoint.catalog))
     for threads in thread_loop:
-        if threads['thread_closed'] is not None:
+        if 'thread_closed' in threads:
             continue
         thread_resp = req(url.default, board_code="vt", thread=threads["thread_id"])
         thread_resp_data = json.loads(thread_resp)
