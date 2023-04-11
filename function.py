@@ -46,7 +46,7 @@ def req (url, **kwargs) :
 
 def board_list(url, **kwargs) :
     r"""Board Listing purpose, uses 4chan catalog api, return should be 
-    a dict of thread list
+    an array of thread list
     """
 
     # Make request to 4chan API
@@ -62,14 +62,14 @@ def board_list(url, **kwargs) :
 
             if 'sticky' not in listed:
                 if 'closed' in listed:
-                    # skip if sticky and closed (either permanent thread or sticky thread)
+                    # skip if sticky and closed 
                     thread_list.append({
                         'thread_id':listed['no'],
                         'thread_posted':listed['time'],
                         'thread_update':listed['last_modified'],
                         'thread_closed':listed['closed']})
                 else:
-                    # skip if sticky (either permanent thread or sticky thread)
+                    # skip if sticky 
                     thread_list.append({
                         'thread_id':listed['no'],
                         'thread_posted':listed['time'],
@@ -97,28 +97,34 @@ while True:
     try:
         thread_loop = board_list(url.default, board_code="vt", endpoint=endpoint.catalog)
         for threads in thread_loop:
+            # check if thread aren't outdated from last get
+            thread_update_check = threadCollect.find_one({{"no": threads['thread_id']}},{ "_id": 0, "time": 1})
+            print(thread_update_check, tCurrent)
+            if thread_update_check['time'] <= tCurrent:
+                print(thread_update_check, tCurrent)
+                continue
+            # check if thread aren't closed
             if 'thread_closed' in threads:
                 continue
-            else:
-                thread_resp = req(url.default, board_code="vt", thread=threads["thread_id"])
-                thread_resp_data = json.loads(thread_resp)
-                # threads = []
-                for post in thread_resp_data['posts']:
-                    if 'resto' in post:
-                        if threadCollect.find_one({"no": post["no"]}):
-                            continue
-                            # feature flag : 
-                            # only run if post is sticky
-                            # ===========================
-                            # threadCollect.update_one({"no": post["no"]}, {"$set": post})
-                            # print(f"[{current_time}] - Updated thread reply: {post['no']}; on: {post['time']}")
-                        else:
-                            threadCollect.insert_one(post)
-                            print(f"[{current_time}] - Inserted thread reply: {post['no']}; on: {post['time']}")    
+            
+            thread_resp = req(url.default, board_code="vt", thread=threads['thread_id'])
+            thread_resp_data = json.loads(thread_resp)
+            # threads = []
+            for post in thread_resp_data['posts']:
+                if 'resto' in post:
+                    if threadCollect.find_one({"no": post['no']}):
+                        continue
+                        # feature flag : 
+                        # only run if post is sticky
+                        # ===========================
+                        # threadCollect.update_one({"no": post["no"]}, {"$set": post})
+                        # print(f"[{current_time}] - Updated thread reply: {post['no']}; on: {post['time']}")
+                    else:
+                        threadCollect.insert_one(post)
+                        print(f"[{current_time}] - Inserted thread reply: {post['no']}; on: {post['time']}")    
         time.sleep(2)
     except Exception as e:
-        print(f'Request failed: {e}')
+        print(f"Request failed: {e}")
         
     # Wait before making next request
     time.sleep(60)
-
