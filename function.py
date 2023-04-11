@@ -57,19 +57,26 @@ def board_list(url, **kwargs) :
     for item in data:
         # threads.extend(item['threads'])
         for listed in item['threads']:
-            thread_id = listed["no"]
-            thread_exists = boardCollect.find_one({"no": thread_id})
+            thread_id = listed['no']
+            thread_exists = boardCollect.find_one({'no': thread_id})
 
             if 'sticky' not in listed:
                 if 'closed' in listed:
                     # skip if sticky and closed (either permanent thread or sticky thread)
-                    thread_list.append({'thread_id':listed['no'],'thread_posted':listed['time'],'thread_update':listed['last_modified'],'thread_closed':listed['closed']})
+                    thread_list.append({
+                        'thread_id':listed['no'],
+                        'thread_posted':listed['time'],
+                        'thread_update':listed['last_modified'],
+                        'thread_closed':listed['closed']})
                 else:
                     # skip if sticky (either permanent thread or sticky thread)
-                    thread_list.append({'thread_id':listed['no'],'thread_posted':listed['time'],'thread_update':listed['last_modified']})
+                    thread_list.append({
+                        'thread_id':listed['no'],
+                        'thread_posted':listed['time'],
+                        'thread_update':listed['last_modified']})
             if thread_exists:
                 # Update the reply if it has changed
-                boardCollect.update_one({"no": listed["no"]}, {"$set": listed})
+                boardCollect.update_one({'no': listed['no']}, {'$set': listed})
                 print(f"[{current_time}] - Updated list: {listed['no']}; on: {listed['time']}")
             else:
                 # Insert the new reply
@@ -99,8 +106,12 @@ while True:
                 for post in thread_resp_data['posts']:
                     if 'resto' in post:
                         if threadCollect.find_one({"no": post["no"]}):
-                            threadCollect.update_one({"no": post["no"]}, {"$set": post})
-                            print(f"[{current_time}] - Updated thread reply: {post['no']}; on: {post['time']}")
+                            continue
+                            # feature flag : 
+                            # only run if post is sticky
+                            # ===========================
+                            # threadCollect.update_one({"no": post["no"]}, {"$set": post})
+                            # print(f"[{current_time}] - Updated thread reply: {post['no']}; on: {post['time']}")
                         else:
                             threadCollect.insert_one(post)
                             print(f"[{current_time}] - Inserted thread reply: {post['no']}; on: {post['time']}")    
