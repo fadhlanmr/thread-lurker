@@ -96,12 +96,12 @@ def board_list(url, **kwargs) :
 
 while True:
     # initiate and get thread list
+    time_local = datetime.datetime.now()
+    current_time = time_local.strftime("%d/%b/%Y %H:%M:%S")
     try:
         thread_loop = board_list(url.default, board_code="vt", endpoint=endpoint.catalog)
         for threads in thread_loop:
-            time_local = datetime.datetime.now()
             time_est = int(time.mktime(datetime.datetime.now(est).timetuple()))
-            current_time = time_local.strftime("%d/%b/%Y %H:%M:%S")
             thread_update_check = thread_last_get.find_one({"no": threads['thread_id']},{ "_id": 0, "thread_last_update": 1})
             if thread_update_check:
                 # skip if thread are up to date from last get
