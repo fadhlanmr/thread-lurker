@@ -1,4 +1,6 @@
+import datetime
 import time
+from pytz import timezone
 import json
 import api_call as acall
 import os
@@ -10,6 +12,7 @@ class env :
     mongoURL = os.environ.get("MONGODB")
     mongodb = os.environ.get("THREAD_LURKER_DB")
     threadCollect = os.environ.get("THREAD_COLLECT")
+    threadLastGet = os.environ.get("THREAD_LAST_GET")
     boardCollect = os.environ.get("BOARD_COLLECT")
 
 class url :
@@ -26,8 +29,10 @@ class endpoint :
 # Set up collection for thread collect
 client = pymongo.MongoClient(env.mongoURL)
 db = client[env.mongodb]
-boardCollect = db[env.boardCollect]
-threadCollect = db[env.threadCollect]
+board_collect = db[env.boardCollect]
+thread_collect = db[env.threadCollect]
+thread_last_get = db[env.threadLastGet]
+est = timezone('EST')
 
 def req (url, **kwargs) :
     r"""Request 4chan API.
@@ -58,7 +63,7 @@ def board_list(url, **kwargs) :
         # threads.extend(item['threads'])
         for listed in item['threads']:
             thread_id = listed['no']
-            thread_exists = boardCollect.find_one({'no': thread_id})
+            thread_exists = board_collect.find_one({'no': thread_id})
 
             if 'sticky' not in listed:
                 if 'closed' in listed:
@@ -76,11 +81,11 @@ def board_list(url, **kwargs) :
                         'thread_update':listed['last_modified']})
             if thread_exists:
                 # Update the reply if it has changed
-                boardCollect.update_one({'no': listed['no']}, {'$set': listed})
+                board_collect.update_one({'no': listed['no']}, {'$set': listed})
                 print(f"[{current_time}] - Updated list: {listed['no']}; on: {listed['time']}")
             else:
                 # Insert the new reply
-                boardCollect.insert_one(listed)
+                board_collect.insert_one(listed)
                 print(f"[{current_time}] - Inserted list: {listed['no']}; on: {listed['time']}")
 
     # turn list -> str, use encode utf to get bytes
@@ -90,20 +95,27 @@ def board_list(url, **kwargs) :
     return thread_list
 
 while True:
-    tLocal = time.localtime()
-    tCurrent = time.time()
-    current_time = time.strftime("%d/%b/%Y %H:%M:%S", tLocal)
     # initiate and get thread list
     try:
         thread_loop = board_list(url.default, board_code="vt", endpoint=endpoint.catalog)
         for threads in thread_loop:
-            # check if thread aren't outdated from last get
-            thread_update_check = threadCollect.find_one({{"no": threads['thread_id']}},{ "_id": 0, "time": 1})
-            print(thread_update_check, tCurrent)
-            if thread_update_check['time'] <= tCurrent:
-                print(thread_update_check, tCurrent)
-                continue
-            # check if thread aren't closed
+            time_local = datetime.datetime.now()
+            time_est = int(time.mktime(datetime.datetime.now(est).timetuple()))
+            current_time = time_local.strftime("%d/%b/%Y %H:%M:%S")
+            thread_update_check = thread_last_get.find_one({"no": threads['thread_id']},{ "_id": 0, "thread_last_update": 1})
+            if thread_update_check:
+                # skip if thread are up to date from last get
+                if thread_update_check['thread_last_update'] >= threads['thread_update']:
+                    continue
+            # insert the last get/update time instead
+            else:
+                thread_last_get_data = {
+                    "thread_id": threads['thread_id'],
+                    "thread_last_update": threads['thread_update'],
+                    "thread_last_get": time_est
+                }
+                thread_last_get.insert_one(thread_last_get_data)
+            # skip if thread are closed
             if 'thread_closed' in threads:
                 continue
             
@@ -112,7 +124,7 @@ while True:
             # threads = []
             for post in thread_resp_data['posts']:
                 if 'resto' in post:
-                    if threadCollect.find_one({"no": post['no']}):
+                    if thread_collect.find_one({"no": post['no']}):
                         continue
                         # feature flag : 
                         # only run if post is sticky
@@ -120,7 +132,7 @@ while True:
                         # threadCollect.update_one({"no": post["no"]}, {"$set": post})
                         # print(f"[{current_time}] - Updated thread reply: {post['no']}; on: {post['time']}")
                     else:
-                        threadCollect.insert_one(post)
+                        thread_collect.insert_one(post)
                         print(f"[{current_time}] - Inserted thread reply: {post['no']}; on: {post['time']}")    
         time.sleep(2)
     except Exception as e:
