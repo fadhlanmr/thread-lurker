@@ -24,8 +24,7 @@ cd thread-lurker
 ```bash
 pip install -r requirements.txt
 ```
-4.Update the MongoDB connection details in the .env file to match your local MongoDB configuration.
-
+4. Update the MongoDB connection details in the .env file to match your local MongoDB configuration.
 5. Run the "function.py" script using Python:
 ```bash
 python function.py
