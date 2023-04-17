@@ -116,9 +116,10 @@ class collector:
                 self.current_time = self.time_get()
                 time_est = int(time.mktime(datetime.datetime.now(est).timetuple()))
                 thread_update_check = thread_last_get.find_one({"no": threads['thread_id']},{ "_id": 0, "thread_last_update": 1})
-                if thread_update_check['thread_last_update'] >= threads['thread_update']:
-                    # skip if thread are up to date from last get
-                    continue    
+                if thread_update_check:
+                    if thread_update_check['thread_last_update'] >= threads['thread_update']:
+                        # skip if thread are up to date from last get
+                        continue
                 if 'thread_closed' in threads:
                     # skip if thread are closed
                     continue
