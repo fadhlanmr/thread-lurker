@@ -34,8 +34,8 @@ def call_api (url, endpoint=None, unix=None, board_code=None, thread=None) :
         
         return api_output
 
-    except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+    except requests.exceptions.RequestException as error:
+        print(f"Request failed: {error}")
 
 #call_api(url.default, endpoint.catalog, unix_to_gmt(lgb), board_code='vt')
 
