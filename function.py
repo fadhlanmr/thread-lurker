@@ -118,15 +118,7 @@ class collector:
                 thread_update_check = thread_last_get.find_one({"no": threads['thread_id']},{ "_id": 0, "thread_last_update": 1})
                 if thread_update_check['thread_last_update'] >= threads['thread_update']:
                     # skip if thread are up to date from last get
-                    continue
-                else:
-                    # insert the last get/update time instead
-                    thread_last_get_data = {
-                        "thread_id": threads['thread_id'],
-                        "thread_last_update": threads['thread_update'],
-                        "thread_last_get": time_est
-                    }
-                    thread_last_get.insert_one(thread_last_get_data)
+                    continue    
                 if 'thread_closed' in threads:
                     # skip if thread are closed
                     continue
@@ -150,6 +142,14 @@ class collector:
                     else:
                         thread_collect.insert_one(post)
                         print(f"[{self.current_time}] - Inserted thread reply: {post['no']}; on: {post['time']}")    
+                
+                # insert the last get/update time instead
+                thread_last_get_data = {
+                    "thread_id": threads['thread_id'],
+                    "thread_last_update": threads['thread_update'],
+                    "thread_last_get": time_est
+                }
+                thread_last_get.insert_one(thread_last_get_data)
             time.sleep(2)
         except Exception as error:
             print(f"Request failed: {error}")
