@@ -123,6 +123,12 @@ class collector:
                     # skip if thread are closed
                     continue
                 
+                # insert the last get/update time instead
+                thread_last_get_data = {
+                    "thread_id": threads['thread_id'],
+                    "thread_last_update": threads['thread_update'],
+                    "thread_last_get": time_est
+                }
                 thread_resp = req(self.url, board_code=self.board_code, thread=threads['thread_id'])
                 thread_resp_data = json.loads(thread_resp)
                 # threads = []
@@ -143,12 +149,7 @@ class collector:
                         thread_collect.insert_one(post)
                         print(f"[{self.current_time}] - Inserted thread reply: {post['no']}; on: {post['time']}")    
                 
-                # insert the last get/update time instead
-                thread_last_get_data = {
-                    "thread_id": threads['thread_id'],
-                    "thread_last_update": threads['thread_update'],
-                    "thread_last_get": time_est
-                }
+                # this last bit only insert thread that succesfully updated, else dont insert
                 thread_last_get.insert_one(thread_last_get_data)
             time.sleep(2)
         except Exception as error:
