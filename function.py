@@ -135,7 +135,7 @@ class collector:
                 thread_resp_data = json.loads(thread_resp)
                 # threads = []
                 for post in thread_resp_data['posts']:
-                    time.sleep(0.07)
+                    time.sleep(0.1)
                     self.current_time = self.time_get()
                     if 'resto' not in post:
                         raise ValueError(f"not a comment / reply to the thread, skipped id: {post['no']}")
