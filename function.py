@@ -113,7 +113,7 @@ class collector:
         try:
             thread_loop = self.board_list()
             for threads in thread_loop:
-                time.sleep(0.2)
+                time.sleep(0.02)
                 self.current_time = self.time_get()
                 time_est = int(time.mktime(datetime.datetime.now(est).timetuple()))
                 thread_update_check = thread_last_get.find_one({"no": threads['thread_id']},{ "_id": 0, "thread_last_update": 1})
@@ -135,7 +135,7 @@ class collector:
                 thread_resp_data = json.loads(thread_resp)
                 # threads = []
                 for post in thread_resp_data['posts']:
-                    time.sleep(0.3)
+                    time.sleep(0.02)
                     self.current_time = self.time_get()
                     if 'resto' not in post:
                         raise ValueError(f"not a comment / reply to the thread, skipped id: {post['no']}")
