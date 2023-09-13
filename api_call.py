@@ -15,9 +15,9 @@ def call_api (url, endpoint=None, unix=None, board_code=None, thread=None) :
         if thread is not None :
             url_call = f"http://{url}/{board_code}/thread/{thread}.json"
         else:
-            url_call = f"http://{url}/{board_code}/{endpoint}"
+            url_call = f"http://{url}/{board_code}/{endpoint}.json"
     else:
-        url_call = f"http://{url}/{endpoint}"
+        url_call = f"http://{url}/{endpoint}.json"
     try:
         if unix is not None :
             last_get = unix_to_gmt(unix)
@@ -42,7 +42,7 @@ def call_api (url, endpoint=None, unix=None, board_code=None, thread=None) :
 #call_api(url.default, endpoint.catalog, unix_to_gmt(lgb), board_code='vt')
 
 def list_thread (urls, endpoints, board_2_code, thread_last_get) :
-    url_thread = f"{urls}/{board_2_code}/{endpoints}"
+    url_thread = f"{urls}/{board_2_code}/{endpoints}.json"
     headers = {'If-Modified-Since':thread_last_get}
     response = requests.get(url_thread, headers)
     # clean some column
@@ -50,7 +50,7 @@ def list_thread (urls, endpoints, board_2_code, thread_last_get) :
     return response
 
 def list_single_thread (urls, board_2_code, thread_id, thread_last_get) :
-    url_thread = f"{urls}/{board_2_code}/thread/{thread_id}"
+    url_thread = f"{urls}/{board_2_code}/thread/{thread_id}.json"
     headers = {'If-Modified-Since':thread_last_get}
     response = requests.get(url_thread, headers)
     # clean some column
@@ -106,9 +106,16 @@ def if_catalog_list(list_board: list, clean_text: bool) -> list:
                     temp_dict[key]=vals.decode()
                     if clean_text :
                         temp_dict[key]=clean_html(value)
-                if key == 'time':
+                if key == 'tim':
+                    temp_dict[key]=value
+                if key == 'ext':
                     temp_dict[key]=value
                 if key == 'replies':
                     temp_dict[key]=value
+            if lists.get('tim') :
+                temp_dict['img'] = f"{lists.get('tim')}{lists.get('ext')}"
             temp_catalog.append(temp_dict)
     return temp_catalog
+
+b = call_api('a.4cdn.org', 'catalog', board_code='vt')
+print(if_catalog_list(b, True))
